@@ -116,6 +116,12 @@ API Requirements
 - Create Profiles
 - Handle receiving Pokémon related to Profiles
 
+## AI Use
+
+Use of AI-assisted programming is acceptable. 
+
+If you use an LLM, add an LLM_TRANSCRIPT.md file to the repo with the tool, model, and transcript of your conversation.
+
 ## Submission Criteria
 
 All of your work should be located in a Github Repo.
