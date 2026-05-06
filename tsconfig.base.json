@@ -1,20 +1,18 @@
 {
-  "compileOnSave": false,
   "compilerOptions": {
-    "rootDir": ".",
-    "sourceMap": true,
-    "declaration": false,
-    "moduleResolution": "node",
     "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
     "experimentalDecorators": true,
     "importHelpers": true,
-    "target": "es2015",
+    "lib": ["ES2022", "dom", "ESNext"],
     "module": "esnext",
-    "lib": ["es2020", "dom"],
-    "skipLibCheck": true,
+    "moduleResolution": "bundler",
     "skipDefaultLibCheck": true,
-    "baseUrl": ".",
-    "paths": {}
-  },
-  "exclude": ["node_modules", "tmp"]
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "target": "ES2022",
+    "types": ["node"]
+  }
 }

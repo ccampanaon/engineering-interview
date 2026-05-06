@@ -3,6 +3,7 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import js from '@eslint/js';
 import nxEslintPlugin from '@nx/eslint-plugin';
+import eslintReact from '@eslint-react/eslint-plugin';
 
 const compat = new FlatCompat({
   baseDirectory: dirname(fileURLToPath(import.meta.url)),
@@ -18,6 +19,8 @@ export default [
       '**/coverage/**',
       '**/vite.config.*',
       '**/vitest.config.*',
+      'packages/pokemon-user-backend-e2e/**',
+      'packages/pokemon-ui-e2e/**',
     ],
   },
   {
@@ -57,11 +60,8 @@ export default [
       files: ['**/*.js', '**/*.jsx'],
       rules: { ...config.rules },
     })),
-  ...compat
-    .config({ extends: ['plugin:@nx/react'] })
-    .map((config) => ({
-      ...config,
-      files: ['packages/pokemon-ui/**/*.ts', 'packages/pokemon-ui/**/*.tsx'],
-      rules: { ...config.rules },
-    })),
+  {
+    files: ['packages/pokemon-ui/**/*.ts', 'packages/pokemon-ui/**/*.tsx'],
+    ...eslintReact.configs.recommended,
+  },
 ];

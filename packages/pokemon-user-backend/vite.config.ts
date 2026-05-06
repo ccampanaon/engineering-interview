@@ -19,7 +19,7 @@ export default defineConfig({
       },
       external: [
         /^@nestjs\//,
-        /^typeorm/,
+        /^@mikro-orm\//,
         'reflect-metadata',
         'rxjs',
         /^rxjs\//,

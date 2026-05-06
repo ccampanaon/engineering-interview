@@ -1,10 +1,10 @@
-import {Column, Entity, PrimaryGeneratedColumn} from "typeorm";
+import { Entity, PrimaryKey, Property } from '@mikro-orm/decorators/legacy';
 
 @Entity()
 export class SomeEntity {
-    @PrimaryGeneratedColumn()
-    id: string
+  @PrimaryKey({ type: 'uuid' })
+  id: string = crypto.randomUUID();
 
-    @Column()
-    someCol: string
+  @Property({ type: 'text' })
+  someCol!: string;
 }

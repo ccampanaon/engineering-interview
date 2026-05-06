@@ -20,3 +20,4 @@ k8s_resource(
     labels=['backend'],
     links=['http://localhost:3000/api']
 )
+
