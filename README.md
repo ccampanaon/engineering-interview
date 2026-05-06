@@ -6,13 +6,13 @@ Welcome to Chorus Engineering's Interview project!
 
 We're looking for engineers who are experienced, passionate, and obsessed with strong systems and high productivity.
 
-In order to facilitate this, we are providing an interview project that mirrors the technical stack that used
-here at Chorus.
+To facilitate this, we provide an interview project that mirrors the technical stack we use here at Chorus.
 
-**You, the interviewee, have the power to decide if this is the technology that you want to work on!**
+**You, the interviewee, have the power to decide if this is the technology that you want to work on.**
 
-The goal of this interview is to identify strengths through a take home project, followed by
-a 1 hour pairing session that will extend your work by creating features together.
+The goal of this interview is to understand how you think and build. We care less about whether every feature is complete and more about the decisions you made along the way — your architecture choices, your tradeoffs, what you reached for and why. Show your work. A well-reasoned, thoughtfully structured solution will always stand out over one that just checks the boxes.
+
+This is a take-home project. If it goes well, we'll invite you to a 1-hour pairing session where we'll extend your work together — so treat it like something you'd actually hand off.
 
 ## Tech Stack
 
@@ -115,7 +115,10 @@ API Requirements
 
 Use of AI-assisted programming is acceptable.
 
-If you use an LLM, add an LLM_TRANSCRIPT.md file to the repo with the tool, model, and transcript of your conversation.
+If you use an LLM, add an `LLM_TRANSCRIPT.md` file to the repo with the following:
+
+- The tool and model used (e.g. Cursor, Claude Sonnet 4.5)
+- The **full conversation** — your prompts and the model's responses. Not just the generated output.
 
 ## Submission Criteria
 
