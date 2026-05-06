@@ -23,64 +23,59 @@ a 1 hour pairing session that will extend your work by creating features togethe
 - NX Monorepo
 - Github Actions CI
 - PostgreSQL Database
-- Docker / Docker Desktop
+- Vite
+- Tilt
+- Docker Desktop + Kubernetes
 
 ## Prerequisites
 
-Package Manager: pnpm 8.15.8
+- [nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) with Kubernetes enabled
+- [Tilt](https://docs.tilt.dev/install.html) (`brew install tilt` on macOS)
 
-Node: 20.14.0 (LTS)
-
-Docker
-
-## Instructions
-
-### Install Preqresuites
-1. [Install nvm](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating)
-
-Use this command to install node and npm comes with it.
-```bash
-nvm install --lts 
-```
-
-2. Install pnpm
-```bash
-npm i -g pnpm@8.15.8
-```
-3. [Install Docker / Docker Desktop](https://www.docker.com/products/docker-desktop/)
-
-
-### Getting and Running the Repository
+## Getting Started
 
 **The Hiring Manager will send you a link to this repository.**
 
-Clone this repository, and run the commands below to get started.
+Clone this repository, then run the setup script:
 
-1. Run `pnpm install`
-2. Run `pm2 start`
+```bash
+bash scripts/setup.sh
+```
 
-> Note: The API and React server will automatically watch for changes.
+This will verify all prerequisites, install dependencies, and tell you exactly what to do next.
 
-You can manage start/stop using `pm2`.
+Once setup is complete, start the dev environment:
 
-Use `pm2 logs` to see the logs from all processes.
+```bash
+tilt up
+```
 
-Use `pm2 stop all` to stop the servers.
+| Service  | URL |
+|----------|-----|
+| Frontend | http://localhost:4200 |
+| Backend  | http://localhost:3000/api |
+| Postgres | localhost:5432 |
 
-Use `pm2 delete all` to delete the entry from the pm2 process list.
+Stop everything when you're done:
+
+```bash
+tilt down
+```
 
 ### Connecting to the Database
+
 Use whatever tool you'd like to connect to the database.
 
 [We recommend DataGrip.](https://www.jetbrains.com/datagrip/)
 
-Here are the connection details below.
-
-- **Database**: pokemon
-- **Username**: admin
-- **Password**: admin
-- **Host**: localhost
-- **Port**: 5432
+| Field    | Value     |
+|----------|-----------|
+| Host     | localhost |
+| Port     | 5432      |
+| Database | pokemon   |
+| Username | admin     |
+| Password | admin     |
 
 ## Prompt
 
@@ -118,7 +113,7 @@ API Requirements
 
 ## AI Use
 
-Use of AI-assisted programming is acceptable. 
+Use of AI-assisted programming is acceptable.
 
 If you use an LLM, add an LLM_TRANSCRIPT.md file to the repo with the tool, model, and transcript of your conversation.
 
@@ -130,14 +125,22 @@ Ensure your repo is public, and submit the URL back to the hiring manager.
 
 ### Troubleshooting
 
-> I can't execute pm2!
+> The setup script fails on a prerequisite.
 
-pm2 is part of the devDependencies, so when you install the dependencies, you should be able to
-execute the binary from node_modules.
+Read the output carefully — it will tell you exactly what's missing and link you to the install docs.
 
-Either use `pnpm pm2` or add `node_modules/.bin` to your `PATH`.
+> Docker Desktop says Kubernetes is not enabled.
+
+Open Docker Desktop → Settings → Kubernetes → check "Enable Kubernetes" → Apply & Restart.
+
+> `tilt up` fails immediately.
+
+Make sure Docker Desktop is running and Kubernetes is healthy. You can verify with:
+
+```bash
+kubectl cluster-info --context docker-desktop
+```
 
 > The requirements are confusing. I'm stuck.
 
 Contact the hiring manager, and inform them of the situation. Be specific and clear about your concerns or issues.
-

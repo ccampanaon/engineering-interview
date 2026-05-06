@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pokemon-user-backend
+  labels:
+    app: pokemon-user-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pokemon-user-backend
+  template:
+    metadata:
+      labels:
+        app: pokemon-user-backend
+    spec:
+      containers:
+        - name: pokemon-user-backend
+          image: pokemon-user-backend
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DB_HOST
+              value: pokemon-postgres-service
+            - name: DB_PORT
+              value: '5432'
+            - name: DB_USERNAME
+              value: admin
+            - name: DB_PASSWORD
+              value: admin
+            - name: DB_NAME
+              value: pokemon
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pokemon-user-backend-service
+spec:
+  selector:
+    app: pokemon-user-backend
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: LoadBalancer

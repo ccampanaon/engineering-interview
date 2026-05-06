@@ -1,0 +1,22 @@
+local_resource(
+    'backend: build if changed',
+    serve_cmd='nx watch --projects pokemon-user-backend -- nx build pokemon-user-backend',
+    trigger_mode=TRIGGER_MODE_MANUAL,
+    labels=['backend']
+)
+
+docker_build(
+    'pokemon-user-backend',
+    '../../',
+    dockerfile='../../packages/pokemon-user-backend/Dockerfile'
+)
+
+k8s_yaml(['./k8s/local/deployment.yaml'])
+
+k8s_resource(
+    'pokemon-user-backend',
+    port_forwards=3000,
+    resource_deps=['pokemon-postgres'],
+    labels=['backend'],
+    links=['http://localhost:3000/api']
+)

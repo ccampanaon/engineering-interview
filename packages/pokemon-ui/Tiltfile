@@ -1,0 +1,6 @@
+local_resource(
+    'pokemon-ui: serve',
+    serve_cmd='nx run pokemon-ui:serve',
+    links=['http://localhost:4200'],
+    labels=['frontend']
+)
