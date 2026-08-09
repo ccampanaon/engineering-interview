@@ -21,9 +21,11 @@ include('./packages/pokemon-ui/Tiltfile')
 
 local_resource(
     'db: migration:up',
-    cmd=[
-        'bash', '-c',
-        'cd packages/pokemon-user-backend && pnpm mikro-orm migration:up'
+    cmd='pnpm mikro-orm migration:up',
+    dir='packages/pokemon-user-backend',
+    deps=[
+        'packages/pokemon-user-backend/src/migrations',
+        'packages/pokemon-user-backend/mikro-orm.config.ts',
     ],
     resource_deps=['pokemon-postgres'],
     labels=['database']
@@ -31,10 +33,8 @@ local_resource(
 
 local_resource(
     'db: migration:create',
-    cmd=[
-        'bash', '-c',
-        'cd packages/pokemon-user-backend && pnpm mikro-orm migration:create'
-    ],
+    cmd='pnpm mikro-orm migration:create',
+    dir='packages/pokemon-user-backend',
     resource_deps=['pokemon-postgres'],
     auto_init=False,
     trigger_mode=TRIGGER_MODE_MANUAL,

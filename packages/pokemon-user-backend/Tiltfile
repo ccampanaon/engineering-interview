@@ -16,8 +16,7 @@ k8s_yaml(['./k8s/local/deployment.yaml'])
 k8s_resource(
     'pokemon-user-backend',
     port_forwards=3000,
-    resource_deps=['pokemon-postgres'],
+    resource_deps=['pokemon-postgres', 'db: migration:up'],
     labels=['backend'],
     links=['http://localhost:3000/api']
 )
-

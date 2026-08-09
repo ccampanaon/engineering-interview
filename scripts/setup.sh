@@ -47,8 +47,13 @@ if ! command -v nvm &>/dev/null; then
   ERRORS=$((ERRORS + 1))
 else
   info "nvm found — installing/switching to Node LTS..."
-  nvm install --lts
-  nvm use --lts
+  if [ "$(type -t nvm)" = "function" ]; then
+    nvm install --lts
+    nvm use --lts
+  else
+    nvm install lts
+    nvm use lts
+  fi
   ok "Node $(node --version)"
 fi
 
