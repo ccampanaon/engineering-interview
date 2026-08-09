@@ -4,21 +4,30 @@
 
 > Rule: update this section in every phase's closing commit.
 
-**Exists right now (starter scaffolding only — no feature code yet):**
+**Exists right now (through phase 2 + quality gate):**
 - Nx 22 + pnpm monorepo; four packages: `pokemon-ui` (React 19 + Vite + Emotion),
   `pokemon-ui-e2e` (Playwright), `pokemon-user-backend` (NestJS 11 + MikroORM 7),
   `pokemon-user-backend-e2e` (Jest + axios)
 - Tilt dev environment: k8s Postgres 16 (`admin/admin`, db `pokemon`), backend in
   k8s via Docker, frontend as local Vite dev server, migrations auto-run by Tilt
-- Placeholder code: `SomeEntity` + its migration, `GET /api/hello`, NxWelcome UI
-- `LLM_TRANSCRIPT.md` at repo root
+- Plumbing (phase 1): unified MikroORM config, Vite `/api` proxy → :3000
+- Entities (phase 2): `Pokemon`, `Profile` in `src/modules/database/entities/`
+- Quality gate: `pnpm verify` (= `nx run-many -t typecheck lint test`); backend
+  vitest config unified in `vitest.config.ts` (the `test` block in `vite.config.ts`
+  is gone — vitest ignores it when `vitest.config.ts` exists) with v8 coverage
+  always on, thresholds 80/80/80 lines/statements/functions, 70 branches;
+  pre-commit hook `.githooks/pre-commit` runs `pnpm verify`, activated per-clone
+  by the root `prepare` script (`git config core.hooksPath .githooks`); no e2e
+  and no AI review in the hook
+- Placeholder code: `GET /api/hello`, NxWelcome UI
+- `LLM_TRANSCRIPT.md` + `docs/transcripts/` (01–03), `.claude/agents/code-reviewer.md`
 
 **Does NOT exist yet (do not reference or edit as if it did):**
-- `Pokemon` / `Profile` entities, any real migration, seed data
-- Any real API endpoint (`/api/pokemon`, `/api/profiles`, …)
+- Schema/seed migrations (phase 3), seed data
+- Any real API endpoint (`/api/pokemon`, `/api/profiles`, …) or their tests
 - Any real UI (app.tsx still renders NxWelcome)
-- Vite `/api` proxy; unified MikroORM config (still duplicated CLI vs runtime)
-- GitHub Actions workflows, `docs/transcripts/`, `.claude/agents/code-reviewer.md`
+- Test cleanup (phase 7: `app.spec.tsx` rewrite, backend e2e spec replacement)
+- GitHub Actions workflows (phase 8; will reuse `pnpm verify`)
 
 ## Stack & conventions
 
@@ -35,8 +44,8 @@
   `src/migrations/` (blank `migration:create`, fill in `addSql`); `snapshot: false`.
 - **Dependencies**: add to the **root** `package.json` only; no new dependencies
   without demonstrated need.
-- **Definition of done**: lint and tests pass (`nx run-many -t lint test`) before
-  any task is called finished.
+- **Definition of done**: `pnpm verify` (typecheck + lint + unit tests; coverage
+  thresholds on the backend) passes before any task is called finished.
 
 ## Commands
 
@@ -49,6 +58,7 @@
 | Rebuild backend image under Tilt | trigger `backend: build if changed` in Tilt UI (manual!) or `nx build pokemon-user-backend` |
 | Unit tests | `nx test pokemon-ui` / `nx test pokemon-user-backend` |
 | Lint | `nx run-many -t lint` |
+| Quality gate (typecheck + lint + unit tests; also runs on pre-commit) | `pnpm verify` |
 | Create blank migration | `pnpm mikro-orm migration:create` (run in `packages/pokemon-user-backend/`) |
 | Run migrations | `pnpm mikro-orm migration:up` (same dir; Tilt also auto-runs on migration changes) |
 | Seed data | no separate command — seeding is a data migration, runs with `migration:up` |

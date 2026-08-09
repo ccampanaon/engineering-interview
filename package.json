@@ -5,7 +5,9 @@
   "scripts": {
     "pokemon-ui:serve": "nx run pokemon-ui:serve",
     "pokemon-user-backend:serve": "nx run pokemon-user-backend:serve",
-    "start": "concurrently --kill-others \"pnpm pokemon-ui:serve\" \"pnpm pokemon-user-backend:serve\""
+    "start": "concurrently --kill-others \"pnpm pokemon-ui:serve\" \"pnpm pokemon-user-backend:serve\"",
+    "verify": "nx run-many -t typecheck lint test",
+    "prepare": "git config core.hooksPath .githooks || exit 0"
   },
   "private": true,
   "dependencies": {
