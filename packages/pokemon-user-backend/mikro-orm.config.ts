@@ -6,7 +6,8 @@ import { defineConfig } from '@mikro-orm/postgresql';
 // Extensionless on purpose: the MikroORM CLI's TS loader cannot resolve the
 // `.js` → `.ts` extension alias used elsewhere in the backend; adding `.js`
 // here breaks `pnpm mikro-orm migration:*`.
-import { SomeEntity } from './src/modules/database/entities/some.entity';
+import { Pokemon } from './src/modules/database/entities/pokemon.entity';
+import { Profile } from './src/modules/database/entities/profile.entity';
 
 export default defineConfig({
   host: process.env['DB_HOST'] ?? 'localhost',
@@ -15,7 +16,7 @@ export default defineConfig({
   password: process.env['DB_PASSWORD'] ?? 'admin',
   dbName: process.env['DB_NAME'] ?? 'pokemon',
 
-  entities: [SomeEntity],
+  entities: [Pokemon, Profile],
   metadataProvider: ReflectMetadataProvider,
   namingStrategy: UnderscoreNamingStrategy,
 
