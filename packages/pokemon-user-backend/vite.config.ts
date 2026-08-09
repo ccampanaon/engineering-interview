@@ -1,5 +1,4 @@
-/// <reference types='vitest' />
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from 'vite';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
@@ -35,16 +34,5 @@ export default defineConfig({
   },
   ssr: {
     noExternal: true,
-  },
-  test: {
-    globals: true,
-    root: __dirname,
-    environment: 'node',
-    include: ['src/**/*.{test,spec}.{ts,mts}'],
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: '../../coverage/packages/pokemon-user-backend',
-      provider: 'v8',
-    },
   },
 });

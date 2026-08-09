@@ -1,0 +1,4 @@
+#!/bin/sh
+# Quality gate: typecheck + lint + unit tests (Nx-cached, e2e excluded).
+# Activated per-clone by the root "prepare" script (core.hooksPath).
+pnpm verify
