@@ -4,7 +4,7 @@
 
 > Rule: update this section in every phase's closing commit.
 
-**Exists right now (through phase 2 + quality gate):**
+**Exists right now (through phase 3 + quality gate):**
 - Nx 22 + pnpm monorepo; four packages: `pokemon-ui` (React 19 + Vite + Emotion),
   `pokemon-ui-e2e` (Playwright), `pokemon-user-backend` (NestJS 11 + MikroORM 7),
   `pokemon-user-backend-e2e` (Jest + axios)
@@ -12,6 +12,11 @@
   k8s via Docker, frontend as local Vite dev server, migrations auto-run by Tilt
 - Plumbing (phase 1): unified MikroORM config, Vite `/api` proxy → :3000
 - Entities (phase 2): `Pokemon`, `Profile` in `src/modules/database/entities/`
+- Migrations (phase 3): `Migration20260810040842_schema` (3 tables, DDL matches
+  `schema:create --dump` verbatim, drops `some_entity`) and
+  `Migration20260810040850_seed_pokemon` (150 rows, English display names from
+  PokeAPI `pokemon-species/{1..150}`, uuids fixed at authoring time); no `down()`
+  on either (reset path = wiped volume); verified from wiped PVC via `tilt up`
 - Quality gate: `pnpm verify` (= `nx run-many -t typecheck lint test`); backend
   vitest config unified in `vitest.config.ts` (the `test` block in `vite.config.ts`
   is gone — vitest ignores it when `vitest.config.ts` exists) with v8 coverage
@@ -23,7 +28,6 @@
 - `LLM_TRANSCRIPT.md` + `docs/transcripts/` (01–03), `.claude/agents/code-reviewer.md`
 
 **Does NOT exist yet (do not reference or edit as if it did):**
-- Schema/seed migrations (phase 3), seed data
 - Any real API endpoint (`/api/pokemon`, `/api/profiles`, …) or their tests
 - Any real UI (app.tsx still renders NxWelcome)
 - Test cleanup (phase 7: `app.spec.tsx` rewrite, backend e2e spec replacement)
