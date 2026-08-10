@@ -4,7 +4,7 @@
 
 > Rule: update this section in every phase's closing commit.
 
-**Exists right now (through phase 3 + quality gate):**
+**Exists right now (through phase 5, write path):**
 - Nx 22 + pnpm monorepo; four packages: `pokemon-ui` (React 19 + Vite + Emotion),
   `pokemon-ui-e2e` (Playwright), `pokemon-user-backend` (NestJS 11 + MikroORM 7),
   `pokemon-user-backend-e2e` (Jest + axios)
@@ -17,10 +17,23 @@
   `Migration20260810040850_seed_pokemon` (150 rows, English display names from
   PokeAPI `pokemon-species/{1..150}`, uuids fixed at authoring time); no `down()`
   on either (reset path = wiped volume); verified from wiped PVC via `tilt up`
+- Read path (phase 4): `GET /api/pokemon`, `GET /api/profiles` — thin controllers,
+  services return bare DTOs (`PokemonDto`, `ProfileDto`); profiles query uses
+  `strategy: 'joined'` to avoid N+1 on the pokemon collection
+- Write path (phase 5): `POST /api/profiles` (body `{ name }`), `PUT
+  /api/profiles/:profileId/pokemon` (body: array of ≤6 pokemon ids, full replace);
+  all validation hand-rolled in `ProfilesService` (see Architecture decisions);
+  `profiles.service.spec.ts` is the first backend spec — 19 cases covering the
+  validation ladder, transaction usage, and replace semantics
 - Quality gate: `pnpm verify` (= `nx run-many -t typecheck lint test`); backend
   vitest config unified in `vitest.config.ts` (the `test` block in `vite.config.ts`
   is gone — vitest ignores it when `vitest.config.ts` exists) with v8 coverage
   always on, thresholds 80/80/80 lines/statements/functions, 70 branches;
+  `passWithNoTests` removed now that a real spec exists, but `coverage.include`
+  deliberately left unset — thresholds apply only to files the test suite
+  actually loads (currently `ProfilesService` + entities), not the whole `src`
+  tree; making untested files (e.g. `PokemonService`, controllers) count against
+  the thresholds repo-wide is a phase 8 CI decision, not this phase's;
   pre-commit hook `.githooks/pre-commit` runs `pnpm verify`, activated per-clone
   by the root `prepare` script (`git config core.hooksPath .githooks`); no e2e
   and no AI review in the hook
@@ -28,7 +41,6 @@
 - `LLM_TRANSCRIPT.md` + `docs/transcripts/` (01–03), `.claude/agents/code-reviewer.md`
 
 **Does NOT exist yet (do not reference or edit as if it did):**
-- Any real API endpoint (`/api/pokemon`, `/api/profiles`, …) or their tests
 - Any real UI (app.tsx still renders NxWelcome)
 - Test cleanup (phase 7: `app.spec.tsx` rewrite, backend e2e spec replacement)
 - GitHub Actions workflows (phase 8; will reuse `pnpm verify`)
@@ -92,10 +104,23 @@ features unless explicitly asked for while building.
 **API** (bare arrays/objects, no response envelope)
 - `GET /api/pokemon` — all 150 from the DB
 - `GET /api/profiles` — each profile includes its team as pokemon ids (no detail endpoint)
-- `POST /api/profiles` — body `{ name }`
-- `PUT /api/profiles/:profileId/pokemon` — full-replace, body: array of ≤6 pokemon ids
-- Validation is **manual** in controller/service (no `class-transformer` /
-  ValidationPipe): 404 unknown profile; 400 for >6 ids, duplicate ids, or unknown ids
+- `POST /api/profiles` — body `{ name }`; name is stored **verbatim, never
+  trimmed** — only checked for missing/non-string/empty-or-whitespace (400).
+  201 + the created `ProfileDto` (`pokemon: []`)
+- `PUT /api/profiles/:profileId/pokemon` — full-replace via
+  `profile.pokemon.set(...)` on a deliberately un-populated collection (an
+  uninitialized `Collection`'s `set()` wipes+reinserts the pivot rows at flush
+  instead of diffing a loaded snapshot — matches full-replace and skips a join
+  query), inside `em.transactional(...)`. 200 + the updated `ProfileDto`
+- Validation is **manual** in `ProfilesService` (no `class-transformer` /
+  ValidationPipe), ladder order for the PUT body: not-an-array → non-uuid/
+  non-string element → >6 ids → duplicate ids (case-insensitive — ids are
+  lower-cased first since Postgres `uuid` compares that way) → profile not
+  found (404; a malformed `profileId` is rejected the same way, before the
+  transaction opens, no query) → unknown pokemon id (400). Generic 400s name
+  the rule violated (`"pokemon must not contain duplicate ids"`); the
+  unknown-id 400 additionally names the offending id(s), since that's
+  DB-derived information the caller can't otherwise get
 - `GET /api/hello` stays as smoke/health endpoint
 
 **Seeding**
