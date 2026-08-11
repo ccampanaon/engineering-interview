@@ -4,7 +4,7 @@
 
 > Rule: update this section in every phase's closing commit.
 
-**Exists right now (through phase 5, write path):**
+**Exists right now (through phase 8, wrap-up — implementation order complete):**
 - Nx 22 + pnpm monorepo; four packages: `pokemon-ui` (React 19 + Vite + Emotion),
   `pokemon-ui-e2e` (Playwright), `pokemon-user-backend` (NestJS 11 + MikroORM 7),
   `pokemon-user-backend-e2e` (Jest + axios)
@@ -32,18 +32,56 @@
   `passWithNoTests` removed now that a real spec exists, but `coverage.include`
   deliberately left unset — thresholds apply only to files the test suite
   actually loads (currently `ProfilesService` + entities), not the whole `src`
-  tree; making untested files (e.g. `PokemonService`, controllers) count against
-  the thresholds repo-wide is a phase 8 CI decision, not this phase's;
+  tree; phase 8 resolved the repo-wide question left open here: CI runs the
+  same `pnpm verify` as the hook, unchanged, so thresholds stay scoped as
+  configured rather than expanding to cover untested files like
+  `PokemonService` or the controllers;
   pre-commit hook `.githooks/pre-commit` runs `pnpm verify`, activated per-clone
   by the root `prepare` script (`git config core.hooksPath .githooks`); no e2e
   and no AI review in the hook
-- Placeholder code: `GET /api/hello`, NxWelcome UI
-- `LLM_TRANSCRIPT.md` + `docs/transcripts/` (01–03), `.claude/agents/code-reviewer.md`
+- Frontend (phase 6): `app.tsx` replaces NxWelcome — fetches `/api/pokemon`
+  and `/api/profiles` on mount (independent loading/error states per fetch);
+  profile create (`POST /api/profiles`) and select; pokemon grid virtualized
+  via `react-virtuoso` (`virtualized-pokemon-grid.tsx` + `pokemon-card.tsx`,
+  `spinner.tsx` for loading); selecting a profile seeds a local `draft` array
+  from its persisted team, toggling pokemon mutates only the draft (capped at
+  6 client-side) and never the source `profiles` state; submit
+  (`PUT /api/profiles/:id/pokemon`) writes the server's response back into
+  `profiles` and `draft`; the Save button's dirty check (`sameTeam`) compares
+  `draft` vs the persisted team **as sets, not arrays** — team order isn't
+  persisted (see Architecture decisions), so toggling a pokemon off then back
+  on must read as unchanged even though it lands at the end of the array
+- Test cleanup (phase 7): `app.spec.tsx` rewritten — 2 cases (renders fetched
+  pokemon + profiles; shows an error message when `/api/pokemon` fails);
+  `VirtualizedPokemonGrid` is mocked out since `react-virtuoso` needs real
+  browser layout (`ResizeObserver`, `offsetParent`) that jsdom doesn't provide
+  and would render zero rows regardless of data — the mock lets the test
+  target what `App` actually owns, not react-virtuoso's rendering; backend e2e
+  spec (`pokemon-user-backend.spec.ts`) replaced with 2 cases against a live
+  backend (`GET /api/pokemon` returns all 150, `GET /api/profiles` returns an
+  array) — this project only exposes an `e2e` target (no `test`), so it's
+  excluded from `pnpm verify` and CI by construction, not by an exclude rule
+- Wrap-up (phase 8): `.github/workflows/ci.yml` — triggers on `pull_request`
+  and `push` to `main`; `actions/checkout` → `pnpm/action-setup` (version read
+  from root `package.json`'s `packageManager` field, not pinned in the
+  workflow) → `actions/setup-node` with `node-version-file: '.nvmrc'` and
+  `cache: 'pnpm'` → `pnpm install --frozen-lockfile` → `pnpm verify`; runs the
+  literal `pnpm verify` script rather than a separately-typed `nx run-many`
+  invocation, so the workflow and the pre-commit hook can never drift apart;
+  deliberately typecheck+lint+test, **not** +build — `vite build` transpiles
+  through esbuild without type-checking, so swapping `typecheck` for `build`
+  (as originally sketched below in Implementation order) would have dropped
+  real type-checking from CI while adding a step that can't substitute for it;
+  no deploy, no matrix, no caching beyond the standard `setup-node` pnpm cache
+- Placeholder code: `GET /api/hello`
+- `LLM_TRANSCRIPT.md` + `docs/transcripts/` (01–10, index rows/commit SHAs not
+  yet fully backfilled — see session notes), `.claude/agents/code-reviewer.md`
 
-**Does NOT exist yet (do not reference or edit as if it did):**
-- Any real UI (app.tsx still renders NxWelcome)
-- Test cleanup (phase 7: `app.spec.tsx` rewrite, backend e2e spec replacement)
-- GitHub Actions workflows (phase 8; will reuse `pnpm verify`)
+**Does NOT exist yet:**
+- Nothing outstanding from the phase 1–8 implementation order. The two e2e
+  packages (`pokemon-ui-e2e` Playwright, `pokemon-user-backend-e2e` live-backend
+  Jest) are deliberately outside `pnpm verify`/CI — both need a running stack,
+  which is a design choice (see above), not a gap.
 
 ## Stack & conventions
 
