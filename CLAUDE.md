@@ -75,8 +75,8 @@
 | Unit tests | `nx test pokemon-ui` / `nx test pokemon-user-backend` |
 | Lint | `nx run-many -t lint` |
 | Quality gate (typecheck + lint + unit tests; also runs on pre-commit) | `pnpm verify` |
-| Create blank migration | `pnpm mikro-orm migration:create` (run in `packages/pokemon-user-backend/`) |
-| Run migrations | `pnpm mikro-orm migration:up` (same dir; Tilt also auto-runs on migration changes) |
+| Create blank migration | `node ../../node_modules/@mikro-orm/cli/cli.js migration:create` (run in `packages/pokemon-user-backend/`; not `pnpm mikro-orm ...` — pnpm's exec resolution needs a package.json in that dir, and packages/* deliberately has none; not the `.bin` shim either — cmd.exe on Windows won't execute it) |
+| Run migrations | `node ../../node_modules/@mikro-orm/cli/cli.js migration:up` (same dir/caveat; Tilt also auto-runs on migration changes) |
 | Seed data | no separate command — seeding is a data migration, runs with `migration:up` |
 | Export session transcript | `/export` in Claude Code → save to `docs/transcripts/<nn>-<phase>.md`, index in `LLM_TRANSCRIPT.md` |
 
