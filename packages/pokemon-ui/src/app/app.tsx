@@ -1,6 +1,8 @@
 import styled from '@emotion/styled';
 import { useEffect, useState } from 'react';
 import type { SubmitEvent } from 'react';
+import { Spinner } from './spinner.js';
+import { VirtualizedPokemonGrid } from './virtualized-pokemon-grid.js';
 
 interface Pokemon {
   id: string;
@@ -15,36 +17,36 @@ interface Profile {
 }
 
 const TEAM_CAP = 6;
+const ACCENT = '#4f6df5';
 
-const List = styled.ul`
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 8px;
-`;
+// Team order isn't persisted (see CLAUDE.md), so "unchanged" is a set
+// comparison, not an array-equality one — otherwise toggling a pokemon off
+// and back on would read as still-dirty just because it moved to the end.
+function sameTeam(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  const bIds = new Set(b);
+  return a.every((id) => bIds.has(id));
+}
 
-const ListItem = styled.li<{ highlighted?: boolean }>`
-  cursor: pointer;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 8px 12px;
-  background: ${(p) => (p.highlighted ? '#dff5d8' : 'transparent')};
-`;
-
-const DexNumber = styled.span`
-  color: #666;
-  margin-right: 8px;
+const Page = styled.div`
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f4f6ff 0%, #eef1fb 100%);
+  padding: 24px;
 `;
 
 const Section = styled.section`
   margin-bottom: 24px;
 `;
 
+const Divider = styled.hr`
+  border: none;
+  border-top: 1px solid #d7dbef;
+  margin: 24px 0;
+`;
+
 const ProfileList = styled.ul`
   list-style: none;
-  margin: 0 0 12px;
+  margin: 12px 0 0;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
@@ -63,6 +65,40 @@ const CreateForm = styled.form`
   display: flex;
   gap: 8px;
   align-items: center;
+`;
+
+const Input = styled.input`
+  padding: 8px 12px;
+  border: 1px solid #c7cce3;
+  border-radius: 6px;
+  font-size: 14px;
+
+  &:focus {
+    outline: none;
+    border-color: ${ACCENT};
+    box-shadow: 0 0 0 3px rgba(79, 109, 245, 0.15);
+  }
+`;
+
+const Button = styled.button`
+  padding: 8px 16px;
+  border: 1px solid ${ACCENT};
+  border-radius: 6px;
+  background: ${ACCENT};
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 150ms ease, transform 150ms ease;
+
+  &:hover:not(:disabled) {
+    background: #3d59e0;
+  }
+
+  &:disabled {
+    background: #a9b3e8;
+    border-color: #a9b3e8;
+    cursor: not-allowed;
+  }
 `;
 
 const TeamControls = styled.div`
@@ -188,8 +224,10 @@ export function App() {
   }
 
   function togglePokemon(pokemonId: string) {
+    // No-op when no profile is active: the static hint below the heading
+    // already explains why, so there's nothing further to surface here —
+    // setting selectionMessage to the same text would just render it twice.
     if (activeProfileId === null || draft === null) {
-      setSelectionMessage('Select a profile above to edit its team.');
       return;
     }
 
@@ -240,16 +278,32 @@ export function App() {
     }
   }
 
+  const activeProfile = profiles?.find((p) => p.id === activeProfileId) ?? null;
+  const isTeamDirty =
+    activeProfile !== null && draft !== null && !sameTeam(draft, activeProfile.pokemon);
+
   return (
-    <div>
+    <Page>
       <Section>
         <h2>Profiles</h2>
         {profilesError && (
           <ErrorText>Failed to load profiles. Is the backend running?</ErrorText>
         )}
-        {!profilesError && profiles === null && <p>Loading profiles...</p>}
+        {!profilesError && profiles === null && <Spinner label="Loading profiles..." />}
         {!profilesError && profiles !== null && (
           <>
+            <CreateForm onSubmit={handleCreate}>
+              <Input
+                type="text"
+                value={newProfileName}
+                onChange={(e) => setNewProfileName(e.target.value)}
+                placeholder="Profile name"
+              />
+              <Button type="submit" disabled={creating}>
+                Create profile
+              </Button>
+            </CreateForm>
+            {createError && <ErrorText>{createError}</ErrorText>}
             <ProfileList>
               {profiles.map((profile) => (
                 <ProfileItem
@@ -261,28 +315,18 @@ export function App() {
                 </ProfileItem>
               ))}
             </ProfileList>
-            <CreateForm onSubmit={handleCreate}>
-              <input
-                type="text"
-                value={newProfileName}
-                onChange={(e) => setNewProfileName(e.target.value)}
-                placeholder="Profile name"
-              />
-              <button type="submit" disabled={creating}>
-                Create profile
-              </button>
-            </CreateForm>
-            {createError && <ErrorText>{createError}</ErrorText>}
           </>
         )}
       </Section>
+
+      <Divider />
 
       <Section>
         <h2>Pokemon</h2>
         {pokemonError && (
           <ErrorText>Failed to load pokemon. Is the backend running?</ErrorText>
         )}
-        {!pokemonError && pokemon === null && <p>Loading pokemon...</p>}
+        {!pokemonError && pokemon === null && <Spinner label="Loading pokemon..." />}
         {!pokemonError && pokemon !== null && (
           <>
             {activeProfileId === null && (
@@ -293,29 +337,26 @@ export function App() {
                 <span>
                   {draft.length}/{TEAM_CAP} selected
                 </span>
-                <button type="button" onClick={handleSubmitTeam} disabled={submitting}>
-                  {submitting ? 'Saving...' : 'Save team'}
-                </button>
+                <Button
+                  type="button"
+                  onClick={handleSubmitTeam}
+                  disabled={submitting || !isTeamDirty}
+                >
+                  {submitting ? 'Saving...' : isTeamDirty ? 'Save team' : 'Saved'}
+                </Button>
               </TeamControls>
             )}
             {selectionMessage && <HintText>{selectionMessage}</HintText>}
             {submitError && <ErrorText>{submitError}</ErrorText>}
-            <List>
-              {pokemon.map((p) => (
-                <ListItem
-                  key={p.id}
-                  highlighted={draft?.includes(p.id) ?? false}
-                  onClick={() => togglePokemon(p.id)}
-                >
-                  <DexNumber>#{p.pokedexNumber}</DexNumber>
-                  {p.name}
-                </ListItem>
-              ))}
-            </List>
+            <VirtualizedPokemonGrid
+              pokemon={pokemon}
+              isSelected={(id) => draft?.includes(id) ?? false}
+              onToggle={togglePokemon}
+            />
           </>
         )}
       </Section>
-    </div>
+    </Page>
   );
 }
 
