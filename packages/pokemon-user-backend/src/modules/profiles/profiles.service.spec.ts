@@ -13,17 +13,21 @@ function createPokemon(): Pokemon {
 }
 
 // A real `Collection` requires the owning entity to have been hydrated by a
-// live MikroORM instance (its `.set()`/`.remove()` reach for entity-helper
+// live MikroORM instance (its `.removeAll()`/`.add()` reach for entity-helper
 // metadata a bare `new Profile()` never gets). This fake models only the
 // piece of the contract our service depends on and that the plan leans on:
-// `set()` replaces the backing array wholesale rather than appending to it.
+// removeAll() empties the backing array, then add() appends the new items —
+// together a wholesale replace, never a merge with what was there before.
 class FakeCollection<T> {
   #items: T[];
   constructor(items: T[] = []) {
     this.#items = items;
   }
-  set(items: T[]): void {
-    this.#items = [...items];
+  removeAll(): void {
+    this.#items = [];
+  }
+  add(items: T[]): void {
+    this.#items = [...this.#items, ...items];
   }
   getItems(): T[] {
     return this.#items;
@@ -210,11 +214,18 @@ describe('ProfilesService', () => {
     });
 
     // Full-replace semantics (the old team can't survive alongside the new
-    // one) come from MikroORM's real Collection#set on an uninitialized
+    // one) come from MikroORM's real Collection#removeAll on an uninitialized
     // collection wiping the pivot table rather than diffing it — verified
     // against the installed source, not something FakeCollection can
-    // exercise. What this test proves at the service boundary: the new list
-    // handed to .set() is exactly the replacement, never the old + new union.
+    // exercise. (Collection#set was tried first and rejected: it compares
+    // the incoming list's length against the in-memory item count before
+    // marking the collection dirty, and an uninitialized collection always
+    // reports 0 in-memory items, so set([]) sees "0 vs 0" and silently
+    // no-ops instead of wiping — the old team survives a "clear" call. Only
+    // caught by hitting the real backend, since a mock can't reproduce an
+    // ORM-internal short-circuit.) What this test proves at the service
+    // boundary: the new list handed to add() is exactly the replacement,
+    // never the old + new union.
     it('passes only the new ids to the collection, not merged with the old team', async () => {
       const [pokemonA, pokemonB, pokemonC, pokemonD] = [
         createPokemon(),

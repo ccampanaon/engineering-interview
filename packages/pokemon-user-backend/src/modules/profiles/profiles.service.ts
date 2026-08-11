@@ -72,11 +72,21 @@ export class ProfilesService {
         }
       }
 
-      // profile.pokemon is left un-populated on purpose: Collection#set on an
-      // uninitialized collection wipes and reinserts the pivot rows at flush
-      // instead of diffing against a loaded snapshot, which both matches the
-      // "full replace" contract and skips a join query we don't need.
-      profile.pokemon.set(pokemon);
+      // profile.pokemon is left un-populated on purpose: Collection#removeAll
+      // on an uninitialized collection wipes and reinserts the pivot rows at
+      // flush instead of diffing against a loaded snapshot, which both
+      // matches the "full replace" contract and skips a join query we don't
+      // need. Not Collection#set: it diffs the incoming list against the
+      // in-memory item count before marking the collection dirty, and an
+      // uninitialized collection always reports 0 in-memory items — so
+      // set([]) sees "0 vs 0", treats it as no change, and silently skips
+      // the flush (the pivot rows survive even though the response claims
+      // an empty team). removeAll() has no such shortcut: it unconditionally
+      // marks the collection dirty before add() adds back whatever's new.
+      profile.pokemon.removeAll();
+      if (pokemon.length > 0) {
+        profile.pokemon.add(pokemon);
+      }
 
       return { id: profile.id, name: profile.name, pokemon: ids };
     });
